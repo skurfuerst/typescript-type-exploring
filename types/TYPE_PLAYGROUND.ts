@@ -155,9 +155,6 @@ function ExtractStateShapeFirstAndThenUseIt() {
     // What does this mean? Let's look at the example below, which contains the type for `createModel`:
     function createModel<TModelDefinition extends ModelDefinition<ExtractStateShape<TModelDefinition>>>(modelDefinition: TModelDefinition): void {
     }
-    type ExtractStateShape2<TModelDefinition> = TModelDefinition extends {state: infer TState} ? TState : any;
-    function createModel3<TModelDefinition extends ExtractStateShape2<TModelDefinition>>(modelDefinition: TModelDefinition): void {
-    }
     // This line is quite long - especially involving the generics. What is happening here?
     // We'll now dissect the generic part `<TModelDefinition extends ModelDefinition<ExtractStateShape<TModelDefinition>>`:
     // ```
@@ -226,21 +223,16 @@ function ExtractStateShapeFirstAndThenUseIt() {
  */
 function OptionalReducersProblem() {
     // the following types are exactly as the ones above, with the only change being reducers are optional now.
-    interface ModelDefinitionState<TState> {
+    interface ModelDefinition<TState> {
         state: TState;
+        reducers?: TReducers<TState>;
     }
-    interface ModelDefinitionStateAndReducers<TState> extends ModelDefinitionState<TState> {
-        reducers: TReducers<TState>;
-    }
-
     interface TReducers<TState> {
         [reducerName: string]: TReducer<TState>;
     }
     type TReducer<TState> = (state: TState, payload: any) => TState;
-    type ExtractStateShape<TModelDefinition> = TModelDefinition extends {state: infer TStateInferred} ?
-        ModelDefinitionState<TStateInferred>
-         : never;
-    function createModel<TModelDefinition extends ExtractStateShape<TModelDefinition>>(modelDefinition: TModelDefinition): void {
+    type ExtractStateShape<TModelDefinition> = TModelDefinition extends {state: infer TStateInferred} ? TStateInferred : never;
+    function createModel<TModelDefinition extends ModelDefinition<ExtractStateShape<TModelDefinition>>>(modelDefinition: TModelDefinition): void {
     }
 
     // Now in this case, something a little bad is happening: a single reducer is wrong, but
@@ -257,7 +249,36 @@ function OptionalReducersProblem() {
     /* tslint:enable:expect */
 }
 
+/**
+ * ALTERNATIVE way of extracting the state shape, without using `infer`.
+ *
+ * I've just found an alternative way to extract the state shape; so instead of `ExtractStateShape<TModelDefinition>`
+ * we can just use `TModelDefinition["state"]` instead. That's quite neat IMHO, as it makes the code more readable.
+ */
+function AlternativeWayOfExtractingStateShape() {
+    // the following types are exactly as the ones above
+    interface ModelDefinition<TState> {
+        state: TState;
+        reducers?: TReducers<TState>;
+    }
+    interface TReducers<TState> {
+        [reducerName: string]: TReducer<TState>;
+    }
+    type TReducer<TState> = (state: TState, payload: any) => TState;
+    // Only modification here
+    function createModel<TModelDefinition extends ModelDefinition<TModelDefinition['state']>>(modelDefinition: TModelDefinition): void {
+    }
 
+    // This has exactly the same behavior as the last model; just a little easier to read on the type side.
+    /* tslint:disable:expect */
+    createModel({
+        state: "string",
+        reducers: {
+            setValueTo21: (oldState: number, payload: any) => 21
+        }
+    });
+    /* tslint:enable:expect */
+}
 
 function foobar() {
     interface ModelDefinition<TState> {
@@ -268,71 +289,36 @@ function foobar() {
         [reducerName: string]: TReducer<TState>;
     }
     type TReducer<TState> = (state: TState, payload: any) => TState;
-    type ExtractStateShape<TModelDefinition> = TModelDefinition extends {state: infer TStateInferred} ? TStateInferred : never;
-    function createModel<TModelDefinition extends ModelDefinition<ExtractStateShape<TModelDefinition>>>(modelDefinition: TModelDefinition): void {
+    function createModel<TModelDefinition extends ModelDefinition<TModelDefinition["state"]>>(modelDefinition: TModelDefinition): void {
     }
 
+    function effects() {
+    }
     createModel({
         state: 42,
         reducers: {
             setValueTo21: (oldState: number, payload: any) => 21
-        }
-    });
-
-    // The advanced case now correctly shows the error on the reducer; not on the state.
-    /* tslint:disable:expect */
-    createModel({
-        state: "string",
-        reducers: {
-            setValueTo21: (oldState: string, payload: any) => "21"
         },
-        effects: {
-
-        }
+        effects
     });
 
 
-    const y = {
-        state: "string",
-        effects() {
-
+    /* tslint:disable:expect */
+    // WTF??? Why does this break state type inferrence?
+    createModel({
+        state: 42,
+        reducers: {
+            setValueTo21: (oldState: number, payload: any) => 21
+        },
+        foo: {
+            foo() {
+            }
         }
-    }
-    type x = ExtractStateShape<typeof y>;
+    });
     /* tslint:enable:expect */
 
     // TODO: now it is not possible anymore to specify the state using a generic type parameter;
     // i.e. saying "createModel<TState>". I have not been able to do this yet.
 
     // TODO: any behavior??
-}
-
-
-function BasicTestCase2() {
-    type foo = string;
-    const x: foo = "hallo";
-    const ok: foo = 42; // $ExpectError
-
-    const x2 = {
-        myString: "myStr",
-        foo: () => {
-            return "Hallo";
-        },
-        foo2() {
-            return "bar";
-        },
-
-        foo4: function() {
-
-        },
-
-        bar: {
-            foo5() {
-
-            }
-        }
-
-    };
-
-    type x2t = typeof x2;
 }

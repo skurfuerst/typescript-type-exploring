@@ -1,0 +1,19 @@
+{
+  "name": "typescript-type-exploring",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Sebastian Kurfürst <sebastian.kurfuerst@sandstorm.de>",
+  "license": "MIT",
+  "devDependencies": {
+    "dtslint": "^0.4.2"
+  },
+  "scripts": {
+    "dtslint": "dtslint types"
+  },
+  "typesVersions": {
+    ">=3.1": { "*": ["types/index.d.ts"] }
+  },
+  "dependencies": {
+    "typescript": "^3.3.1"
+  }
+}

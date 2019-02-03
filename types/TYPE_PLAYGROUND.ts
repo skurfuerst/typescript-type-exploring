@@ -88,7 +88,7 @@ function NaiveStateReducers() {
         // property highlights as problematic; and not the specific reducer!
         /* tslint:disable:expect */
         createModel({
-            state: "string",
+            state: "string", // TYPE-ERROR HERE!
             reducers: {
                 setValueTo21: (oldState: number, payload: any) => 21
             }
@@ -102,7 +102,7 @@ function NaiveStateReducers() {
         createModel<string>({
             state: "string",
             reducers: {
-                setValueTo21: (oldState: number, payload: any) => 21
+                setValueTo21: (oldState: number, payload: any) => 21  // TYPE-ERROR HERE!
             }
         });
         /* tslint:enable:expect */
@@ -207,7 +207,7 @@ function ExtractStateShapeFirstAndThenUseIt() {
     createModel({
         state: "string",
         reducers: {
-            setValueTo21: (oldState: number, payload: any) => 21
+            setValueTo21: (oldState: number, payload: any) => 21 // TYPE-ERROR HERE!
         }
     });
     /* tslint:enable:expect */
@@ -242,7 +242,7 @@ function OptionalReducersProblem() {
     /* tslint:disable:expect */
     createModel({
         state: "string",
-        reducers: {
+        reducers: { // TYPE-ERROR HERE!
             setValueTo21: (oldState: number, payload: any) => 21
         }
     });
@@ -273,7 +273,7 @@ function AlternativeWayOfExtractingStateShape() {
     /* tslint:disable:expect */
     createModel({
         state: "string",
-        reducers: {
+        reducers: { // TYPE-ERROR HERE!
             setValueTo21: (oldState: number, payload: any) => 21
         }
     });
@@ -308,7 +308,7 @@ function foobar() {
     createModel({
         state: 42,
         reducers: {
-            setValueTo21: (oldState: number, payload: any) => 21
+            setValueTo21: (oldState: number, payload: any) => 21 // TYPE-ERROR HERE!
         },
         foo: {
             foo() {
@@ -316,9 +316,4 @@ function foobar() {
         }
     });
     /* tslint:enable:expect */
-
-    // TODO: now it is not possible anymore to specify the state using a generic type parameter;
-    // i.e. saying "createModel<TState>". I have not been able to do this yet.
-
-    // TODO: any behavior??
 }

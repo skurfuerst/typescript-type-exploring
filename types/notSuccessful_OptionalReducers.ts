@@ -21,7 +21,7 @@ function OptionalReducersSolution_notWorking() {
     /* tslint:disable:expect */
     createModel({
         state: "string",
-        reducers: {
+        reducers: { // TYPE-ERROR HERE!
             setValueTo21: (oldState: number, payload: any) => 21
         }
     });
